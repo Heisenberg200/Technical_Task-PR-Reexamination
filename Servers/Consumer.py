@@ -1,9 +1,8 @@
 import threading 
 import time 
-
 import flask
-
 import requests
+import concurrent.futures
 
 order_stack = []
 app = flask.Flask(__name__)
@@ -22,7 +21,12 @@ def order_getter():
         else:
             time.sleep(1)
         extractor_served_order_threads = 3
-        order_getter = [threading.Thread(target=order_getter)for i in range(extractor_served_order_threads)]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            result = [executor.submit(put_order,order_getter) for order_getter in range(extractor_served_order_threads)]
+            for f in concurrent.futures.as_completed(result):
+                pass
+         
+       
         if __name__ == '__main__':
             for thread in order_getter:
                 thread.start()

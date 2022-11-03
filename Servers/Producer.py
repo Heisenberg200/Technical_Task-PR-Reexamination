@@ -6,11 +6,19 @@ import flask
 import sys
 import random
 import socket
+import concurrent.futures
 
 
 ORDER_ID = 1 
 queue = []
-order_list = []
+order_list = [[{"id": 1, "item": "pizza"},
+         {"id": 2, "item": "salad"},
+         {"id": 3, "item": "zeama"},
+         {"id": 4, "item": "Scallop"},
+         {"id": 5, "item": "Island Duck"},
+         {"id": 6, "item": "Waffles"}]]
+
+
 
 app = flask.Flask(__name__)
 @app.get("/start/")
@@ -61,8 +69,19 @@ extractor_served_order_threads = 3
 generator_order_threads = 10
 order_number = 0
 active_status = False
-order_extractors = [threading.Thread(target=queue_order_extractor) for i in range(extractor_served_order_threads)]
-order_generator = [threading.Thread(target = generate_orders) for i in range(generator_order_threads)]
+def order_generator():
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        result = [executor.submit(start, order_generator) for order_generator in range(generator_order_threads)]
+        for f in concurrent.futures.as_completed(result):
+            pass
+
+def order_extractors():
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = [executor.submit(start, order_extractors) for order_extractors in range(extractor_served_order_threads)]
+        for f in concurrent.futures.as_completed(results):
+            pass
+
+
 
 if __name__ == '__main__':
     for thread in order_extractors:
